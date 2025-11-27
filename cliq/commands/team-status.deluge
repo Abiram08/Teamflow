@@ -1,0 +1,45 @@
+/**
+ * /team-status
+ * Returns avg team capacity, top 3 overloaded members.
+ */
+
+// Query capacity_cache
+query = "SELECT * FROM capacity_cache";
+response = zoho.catalyst.executeZCQLQuery(query);
+rows = response.get("data");
+
+total_cap = 0;
+count = 0;
+overloaded = List();
+
+for each row in rows {
+    data = row.get("capacity_cache");
+    cap = data.get("capacity_percent");
+    total_cap = total_cap + cap;
+    count = count + 1;
+    
+    if (data.get("status") == "Overloaded" || data.get("status") == "Critical") {
+        overloaded.add(data);
+    }
+}
+
+avg = 0;
+if (count > 0) {
+    avg = total_cap / count;
+}
+
+text = "### Team Status\n";
+text = text + "**Average Capacity:** " + avg + "%\n\n";
+
+if (overloaded.size() > 0) {
+    text = text + "**Overloaded Members:**\n";
+    for each m in overloaded {
+        text = text + "- User " + m.get("user_id") + ": " + m.get("status") + " (" + m.get("capacity_percent") + "%)\n";
+    }
+} else {
+    text = text + "✅ No overloaded members.";
+}
+
+return {
+    "text": text
+};
