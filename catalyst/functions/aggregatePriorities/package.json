@@ -1,0 +1,16 @@
+{
+    "name": "aggregate-priorities",
+    "version": "1.0.0",
+    "description": "Aggregates and scores task priorities",
+    "main": "index.js",
+    "scripts": {
+        "test": "jest"
+    },
+    "dependencies": {
+        "zcatalyst-sdk-node": "^3.0.0",
+        "p-map": "^6.0.0"
+    },
+    "devDependencies": {
+        "jest": "^29.7.0"
+    }
+}
