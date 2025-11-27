@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeamFlow Command Center</title>
+    <link rel="stylesheet" href="widget.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TeamFlow</h1>
+            <button id="refresh-btn" aria-label="Refresh">↻</button>
+        </header>
+
+        <section id="summary-cards" class="cards-grid">
+            <div class="card">
+                <h3>Avg Capacity</h3>
+                <div class="value" id="avg-capacity">--%</div>
+            </div>
+            <div class="card">
+                <h3>Overloaded</h3>
+                <div class="value" id="overloaded-count">--</div>
+            </div>
+            <div class="card">
+                <h3>Next Critical</h3>
+                <div class="value small" id="next-critical">--</div>
+            </div>
+        </section>
+
+        <section id="member-list">
+            <h2>Team Members</h2>
+            <div id="members-container">
+                <!-- Member items will be injected here -->
+                <div class="loading">Loading...</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="widget.js"></script>
+</body>
+</html>
