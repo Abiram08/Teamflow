@@ -1,0 +1,67 @@
+// Widget_Handler.dg
+// Native Cliq Widget Handler
+
+response = Map();
+response.put("type", "applet");
+response.put("header", "TeamFlow Command Center");
+response.put("active_tab", "dashboard");
+
+sections = List();
+
+// Section 1: Team Load Chart (New)
+section1 = Map();
+section1.put("id", "load_chart");
+section1.put("label", "Workload Distribution");
+section1.put("type", "chart");
+section1.put("chart_type", "bar");
+section1.put("title", "Current Team Load (%)");
+section1.put("description", "Real-time visual breakdown of team capacity.");
+
+// Get data from Team_Utils
+team_data = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_team_status();
+
+x_axis = List();
+y_axis = List();
+
+for each member in team_data
+{
+    x_axis.add(member.get("name"));
+    // Parse "95%" to 95
+    load_str = member.get("load").replaceAll("%", "");
+    y_axis.add(load_str.toLong());
+}
+
+chart_data = Map();
+chart_data.put("x_axis", x_axis);
+chart_data.put("y_axis", y_axis);
+chart_data.put("y_axis_label", "Load %");
+
+section1.put("data", chart_data);
+sections.add(section1);
+
+// Section 2: Team Capacity Table
+section2 = Map();
+section2.put("id", "team_capacity");
+section2.put("label", "Detailed Status");
+section2.put("type", "table");
+
+rows = List();
+for each member in team_data
+{
+    row = Map();
+    row.put("Name", member.get("name"));
+    row.put("Status", member.get("status"));
+    row.put("Load", member.get("load"));
+    rows.add(row);
+}
+
+table_data = Map();
+table_data.put("headers", {"Name", "Status", "Load"});
+table_data.put("rows", rows);
+
+section2.put("data", table_data);
+sections.add(section2);
+
+response.put("sections", sections);
+
+return response;
