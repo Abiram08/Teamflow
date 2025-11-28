@@ -1,0 +1,20 @@
+// TeamStatus_Command/Execution_Handler.dg
+
+team_data = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_team_status();
+
+text = "📊 **Team Status Report**\n\n";
+
+for each member in team_data
+{
+    name = member.get("name");
+    status = member.get("status");
+    load = member.get("load");
+    
+    icon = "🟢";
+    if (status == "Busy") { icon = "🟡"; }
+    if (status == "Overloaded") { icon = "🔴"; }
+    
+    text = text + icon + " **" + name + "**: " + status + " (" + load + ")\n";
+}
+
+return text;

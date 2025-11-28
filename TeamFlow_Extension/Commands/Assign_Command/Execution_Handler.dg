@@ -1,0 +1,10 @@
+// Assign_Command/Execution_Handler.dg
+
+suggested_user = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_suggested_assignee();
+
+response = Map();
+text = "🤖 **Smart Assignment Recommendation**\n\n";
+text = text + "Based on current workload, I recommend assigning this task to: **" + suggested_user + "**.";
+
+response.put("text", text);
+return response;
