@@ -1,0 +1,60 @@
+{
+    "schema_version": "1.0",
+    "info": {
+        "name": "TeamFlow Command Center",
+        "description": "Native Team Capacity Dashboard and Smart Assignment for Zoho Cliq.",
+        "version": "2.0.0",
+        "icons": {
+            "light": "icons/light.png",
+            "dark": "icons/dark.png"
+        }
+    },
+    "bot": {
+        "name": "TeamFlow Bot",
+        "handler": "TeamFlow_Extension/Bots/TeamFlow_Bot/Bot_Handler.dg",
+        "menu": [
+            {
+                "name": "Team Status",
+                "action": "team-status"
+            }
+        ]
+    },
+    "widget": {
+        "name": "TeamFlow Dashboard",
+        "handler": "TeamFlow_Extension/Widgets/Dashboard_Widget/Widget_Handler.dg",
+        "height": "400"
+    },
+    "commands": [
+        {
+            "name": "/priority",
+            "description": "Get top priority items for a user",
+            "handler": "TeamFlow_Extension/Commands/Priority_Command/Execution_Handler.dg",
+            "access": "everyone"
+        },
+        {
+            "name": "/assign",
+            "description": "Smart assign a task to the best candidate",
+            "handler": "TeamFlow_Extension/Commands/Assign_Command/Execution_Handler.dg",
+            "access": "everyone"
+        },
+        {
+            "name": "/team-status",
+            "description": "View team capacity and overloaded members",
+            "handler": "TeamFlow_Extension/Commands/TeamStatus_Command/Execution_Handler.dg",
+            "access": "everyone"
+        }
+    ],
+    "databases": [
+        {
+            "name": "team_members",
+            "description": "Stores user details and skills"
+        },
+        {
+            "name": "capacity_cache",
+            "description": "Stores calculated capacity and status"
+        }
+    ],
+    "permissions": [
+        "webhook"
+    ]
+}

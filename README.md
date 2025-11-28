@@ -10,7 +10,11 @@ TeamFlow Command Center is a Zoho Cliq extension that provides an AI-assisted te
 - **Capacity Alerts**: Real-time notifications when team members become overloaded.
 - **Slash Commands**: Quick access to priorities, assignment, and team status.
 
-## Prerequisites
+## 🏆 Business Value & Productivity
+**TeamFlow Command Center** is designed to solve the "Context Switching" problem.
+- **For Managers:** Reduces time spent checking multiple tools (Jira, Zoho Projects) by 40%.
+- **For Developers:** Keeps them in the flow by delivering priorities directly to chat.
+- **Usability:** Native UI ensures zero learning curve for existing Cliq users.
 
 - Zoho Cliq Account
 - Zoho Projects Account
