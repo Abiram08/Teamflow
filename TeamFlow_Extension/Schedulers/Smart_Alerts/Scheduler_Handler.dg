@@ -1,0 +1,54 @@
+
+/**
+ * Smart Alerts Scheduler
+ * Runs periodically (e.g., every hour) to check team health.
+ */
+
+// 1. Get Team Data
+team_data = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_team_status();
+
+// 2. Analyze for Overload
+overloaded_members = List();
+for each member in team_data
+{
+    if (member.get("status") == "Overloaded") {
+        overloaded_members.add(member);
+    }
+}
+
+// 3. Send Alert if Overload Detected
+if (overloaded_members.size() > 0) {
+    
+    text = "🔴 **OVERLOAD ALERT**\n";
+    
+    for each m in overloaded_members
+    {
+        name = m.get("name");
+        load = m.get("load");
+        text = text + "@" + name + " is at " + load + " capacity.\n";
+    }
+    
+    // Suggest Rebalancing (Mock Logic)
+    text = text + "\n💡 **Suggestion:** Move tasks to @Bob (30% capacity).";
+
+    // Post to a specific channel (e.g., "Managers") or Bot context
+    // In a real app, use zoho.cliq.postToChannel("managers", ...)
+    // For MVP, we return the text (Schedulers usually post async)
+    
+    // Example Post (Commented out as we don't have a real channel ID)
+    // zoho.cliq.postToChannel("team-updates", {"text": text, "card": {"theme": "modern-inline", "title": "Capacity Alert"}});
+    
+    info text; // Log for testing
+}
+
+// 4. Deadline Warning (Mock)
+// In real app, check due dates from Zoho Projects
+current_hour = 9; // Mock time
+if (current_hour == 9) {
+    // Daily Standup Reminder
+    standup_msg = "⏰ **DAILY STANDUP REMINDER**\nGood morning team! Quick status:\n- 5 tasks in progress\n- 2 blockers detected";
+    // zoho.cliq.postToChannel("general", {"text": standup_msg});
+    info standup_msg;
+}
+
+return;

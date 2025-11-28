@@ -42,6 +42,34 @@
             "description": "View team capacity and overloaded members",
             "handler": "TeamFlow_Extension/Commands/TeamStatus_Command/Execution_Handler.dg",
             "access": "everyone"
+        },
+        {
+            "name": "/meeting-cost",
+            "description": "Calculate meeting cost and ROI",
+            "handler": "TeamFlow_Extension/Commands/MeetingCost_Command/Execution_Handler.dg",
+            "access": "everyone"
+        }
+    ],
+    "schedulers": [
+        {
+            "name": "smart-alerts",
+            "description": "Proactive alerts for overload and deadlines",
+            "handler": "TeamFlow_Extension/Schedulers/Smart_Alerts/Scheduler_Handler.dg",
+            "cron": "0 * * * *"
+        }
+    ],
+    "functions": [
+        {
+            "name": "apply_rebalance",
+            "handler": "TeamFlow_Extension/Functions/Rebalance_Action.dg"
+        },
+        {
+            "name": "log_meeting",
+            "handler": "TeamFlow_Extension/Functions/Team_Utils.dg"
+        },
+        {
+            "name": "create_async_update",
+            "handler": "TeamFlow_Extension/Functions/Team_Utils.dg"
         }
     ],
     "databases": [

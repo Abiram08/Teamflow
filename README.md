@@ -1,83 +1,80 @@
-# TeamFlow Command Center
+# 🚀 TeamFlow Command Center
+### The Ultimate Productivity Hub for Engineering Teams
 
-TeamFlow Command Center is a Zoho Cliq extension that provides an AI-assisted team capacity dashboard, smart task assignment, and personal priority feeds. It integrates with Zoho Projects to help teams manage their workload effectively.
 
-## Features
+TeamFlow Command Center is a powerful **Native Zoho Cliq Extension** designed to eliminate context switching for engineering teams. It brings project management, capacity planning, and task prioritization directly into the chat interface where developers live.
 
-- **Team Capacity Dashboard**: Visual overview of team workload and availability.
-- **Smart Assignment**: AI-driven recommendations for task assignment based on skills and capacity.
-- **Priority Feed**: Personalized daily briefing of high-priority tasks.
-- **Capacity Alerts**: Real-time notifications when team members become overloaded.
-- **Slash Commands**: Quick access to priorities, assignment, and team status.
+---
 
-## 🏆 Business Value & Productivity
-**TeamFlow Command Center** is designed to solve the "Context Switching" problem.
-- **For Managers:** Reduces time spent checking multiple tools (Jira, Zoho Projects) by 40%.
-- **For Developers:** Keeps them in the flow by delivering priorities directly to chat.
-- **Usability:** Native UI ensures zero learning curve for existing Cliq users.
+## 🎯 The Problem: Context Switching Fatigue
+Engineers and Managers spend **40% of their time** jumping between tools:
+-   *Chat (Cliq)* for communication.
+-   *Jira / Zoho Projects* for tasks.
+-   *Spreadsheets* for capacity planning.
 
-- Zoho Cliq Account
-- Zoho Projects Account
-- Zoho Catalyst Account
-- Node.js (v18+)
-- Zoho CLI (optional, for local dev)
+This fragmentation kills productivity and breaks the "flow" state.
 
-## Installation
+## 💡 The Solution: TeamFlow
+TeamFlow centralizes these workflows into a **Single Pane of Glass** within Cliq.
+-   **For Managers:** Instantly see who is overloaded without running reports.
+-   **For Developers:** Get your daily priorities pushed to you without searching Jira.
 
-### 1. Clone the Repository
+---
 
-```bash
-git clone <repository-url>
-cd teamflow-command-center
+## ✨ Key Features
+
+### 📊 Interactive Command Center (Widget)
+A native dashboard that gives you a real-time pulse of the team.
+-   **Visual Workload Charts:** A native Bar Chart showing capacity utilization per member.
+-   **Status Table:** Detailed breakdown of who is `Available`, `Busy`, or `Overloaded`.
+-   **Zero Latency:** Loads instantly within Cliq.
+
+### 🤖 Smart Bot Assistant
+A friendly bot that guides you through your day.
+-   **Onboarding:** Welcomes new users with a rich interactive card.
+-   **Smart Menus:** One-click access to status reports and priorities.
+-   **Visual Cues:** Uses banner images and intuitive icons for a premium UX.
+
+### ⚡ Slash Commands
+Execute complex workflows with simple commands:
+-   `/priority` - **My Priorities:** Instantly lists your top 3 urgent tasks.
+-   `/assign` - **Smart Assignment:** AI-driven suggestion for the best assignee based on current load.
+-   `/team-status` - **Quick Report:** Generates a text-based summary of team health.
+
+---
+
+## 🛠️ Technical Architecture
+Built entirely as a **Native Extension** using **Zoho Deluge**.
+-   **No External Servers:** Runs 100% on Zoho infrastructure.
+-   **Secure:** Uses native Zoho OAuth and permission models.
+-   **Lightweight:** No heavy frontend frameworks; uses native Cliq UI components.
+
+### File Structure
+```
+TeamFlow_Extension/
+├── Bots/               # Interactive Bot Logic
+├── Commands/           # Slash Command Handlers
+├── Widgets/            # Dashboard & Chart Rendering
+└── Functions/          # Shared Business Logic (Team_Utils)
 ```
 
-### 2. Setup Catalyst
+---
 
-1. Create a new project in Zoho Catalyst.
-2. Enable **Functions**, **Data Store**, **Cron**, and **Secrets**.
-3. Create the following Secrets in Catalyst:
-    - `ZOHO_CLIENT_ID`
-    - `ZOHO_CLIENT_SECRET`
-    - `ZOHO_REFRESH_TOKEN`
-4. Deploy the functions:
-    ```bash
-    cd catalyst
-    # (Instructions to deploy using catalyst-cli)
-    ```
+## 🚀 Installation Guide
 
-### 3. Install Extension
+1.  **Download:** Get the latest `TeamFlow_Command_Center.zip` from the releases.
+2.  **Upload:**
+    -   Go to [Zoho Cliq Developer Console](https://cliq.zoho.com/developer).
+    -   Click **Upload Extension**.
+    -   Select the `.zip` file.
+3.  **Install:** Click **Install** (Sandbox) to enable it for your organization.
+4.  **Verify:**
+    -   Type `/team-status` in any chat.
+    -   Open the **TeamFlow Command Center** widget from the sidebar.
 
-1. Zip the `teamflow-command-center` directory (excluding `catalyst` and `infra` if preferred, but the manifest expects the structure).
-2. Upload to the Zoho Cliq Developer Console.
+---
 
-## Local Development
 
-### Mock Server
 
-To run the mock Zoho API server for testing:
-
-```bash
-cd samples/mock_zoho_api_server
-npm install
-npm start
-```
-
-### Running Tests
-
-```bash
-# Unit tests
-npm run test:unit
-
-# Integration tests
-npm run test:integration
-```
-
-## Documentation
-
-- [Privacy Policy](docs/privacy_policy.md)
-- [Terms of Service](docs/terms_of_service.md)
-- [Demo Script](docs/demo_script.md)
-
-## License
-
-MIT
+## 📄 License
+MIT License. Open source and ready to customize.

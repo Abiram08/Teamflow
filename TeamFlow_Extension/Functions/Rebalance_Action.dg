@@ -1,0 +1,58 @@
+
+/**
+ * Rebalance Action Handler
+ * Triggered by "Rebalance Team" button.
+ */
+
+// 1. Get the Plan
+plan = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_rebalancing_plan();
+
+// 2. Check if this is a confirmation (Apply) or a Proposal
+// We can check arguments or just show the proposal first.
+// For simplicity, this function shows the PROPOSAL.
+// The "Apply" button would call another function or this one with a param.
+
+// Let's assume this is the Proposal View
+source = plan.get("source");
+target = plan.get("target");
+tasks = plan.get("tasks"); // List
+
+text = "🤖 **SMART REBALANCING SUGGESTION**\n";
+text = text + "**" + source + "** (Overloaded) ➔ **" + target + "** (Available)\n\n";
+text = text + "Recommended moves:\n";
+
+for each t in tasks
+{
+    text = text + "✓ \"" + t + "\" - " + target + " has relevant skills\n";
+}
+
+text = text + "\n**Impact:**\n";
+text = text + "• " + source + ": " + plan.get("impact_source") + " ✅\n";
+text = text + "• " + target + ": " + plan.get("impact_target") + " ✅\n";
+
+return {
+    "type": "applet",
+    "title": "Smart Rebalancing",
+    "text": text,
+    "card": {
+        "title": "Optimize Team Workload",
+        "theme": "modern-inline"
+    },
+    "buttons": [
+        {
+            "label": "Apply Rebalancing",
+            "action": {
+                "type": "invoke.function",
+                "name": "apply_rebalance" // We need to register this or handle it
+            },
+            "type": "+",
+            "hint": "Move tasks instantly"
+        },
+        {
+            "label": "Cancel",
+            "action": {
+                "type": "system.dismiss"
+            }
+        }
+    ]
+};

@@ -1,0 +1,80 @@
+
+/**
+ * Meeting Cost Calculator Command
+ * Usage: /meeting-cost [duration_hours] [participant_count]
+ * Example: /meeting-cost 2 6
+ */
+
+// 1. Parse Arguments
+args = message.get("text").toList(" ");
+duration = 1.0;
+participants = 0;
+
+if (args.size() >= 1) {
+    duration = args.get(0).toDecimal();
+}
+if (args.size() >= 2) {
+    participants = args.get(1).toLong();
+}
+
+// Default if no args provided (interactive mode hint)
+if (participants == 0) {
+    return {
+        "text": "⚠️ **Usage:** `/meeting-cost [hours] [people]`\nExample: `/meeting-cost 1.5 8`"
+    };
+}
+
+// 2. Calculate Cost
+// Assumptions: Avg hourly rate = ₹2000 (approx $25)
+hourly_rate = 2000;
+total_hours = duration * participants;
+total_cost = total_hours * hourly_rate;
+
+// 3. Calculate Savings (Alternatives)
+async_savings = total_cost * 0.75; // 75% savings
+shorter_savings = total_cost * 0.50; // 50% savings (half time)
+fewer_people_savings = (total_cost / participants) * 2; // Remove 2 people
+
+// 4. Build Response
+response = Map();
+response.put("text", "📉 **Meeting Cost Analysis**");
+
+card = Map();
+card.put("title", "💰 Estimated Cost: ₹" + total_cost);
+card.put("theme", "modern-inline");
+
+// Sections
+sections = List();
+
+// Analysis Section
+analysis_sec = Map();
+analysis_sec.put("type", "kv");
+analysis_data = Map();
+analysis_data.put("Participants", participants);
+analysis_data.put("Duration", duration + " hours");
+analysis_data.put("Total Man-Hours", total_hours + " hours");
+analysis_sec.put("data", analysis_data);
+sections.add(analysis_sec);
+
+// Alternatives Section
+alt_sec = Map();
+alt_sec.put("type", "text");
+alt_text = "💡 **Alternatives & Savings:**\n";
+alt_text = alt_text + "• **Make Async:** Save ₹" + async_savings + "\n";
+alt_text = alt_text + "• **Reduce to 30m:** Save ₹" + (total_cost - (0.5 * participants * hourly_rate)) + "\n";
+if (participants > 2) {
+    alt_text = alt_text + "• **Remove 2 people:** Save ₹" + fewer_people_savings + "\n";
+}
+alt_sec.put("text", alt_text);
+sections.add(alt_sec);
+
+response.put("card", card);
+response.put("sections", sections);
+
+// Buttons
+buttons = List();
+buttons.add({"label": "Proceed", "action": {"type": "invoke.function", "name": "log_meeting"}, "type": "+"});
+buttons.add({"label": "Make Async", "action": {"type": "invoke.function", "name": "create_async_update"}, "hint": "Create a Cliq post instead"});
+response.put("buttons", buttons);
+
+return response;

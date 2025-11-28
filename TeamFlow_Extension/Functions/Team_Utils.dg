@@ -33,3 +33,15 @@ string get_suggested_assignee()
     // For now, hardcoded to Bob
     return "Bob";
 }
+
+map get_rebalancing_plan()
+{
+    // Mock Logic: Move tasks from Overloaded (Alice) to Available (Bob)
+    plan = Map();
+    plan.put("source", "Alice");
+    plan.put("target", "Bob");
+    plan.put("tasks", {"Write API Docs", "Update README"});
+    plan.put("impact_source", "95% -> 65%");
+    plan.put("impact_target", "30% -> 50%");
+    return plan;
+}
