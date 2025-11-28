@@ -1,0 +1,35 @@
+// Team_Utils.dg
+// Functions to handle team data and capacity logic
+
+list get_team_status()
+{
+    // Mock data for now - in real implementation this would fetch from Zoho Projects
+    team_data = List();
+    
+    m1 = Map();
+    m1.put("name", "Alice");
+    m1.put("status", "Overloaded");
+    m1.put("load", "95%");
+    team_data.add(m1);
+    
+    m2 = Map();
+    m2.put("name", "Bob");
+    m2.put("status", "Available");
+    m2.put("load", "30%");
+    team_data.add(m2);
+    
+    m3 = Map();
+    m3.put("name", "Charlie");
+    m3.put("status", "Busy");
+    m3.put("load", "75%");
+    team_data.add(m3);
+    
+    return team_data;
+}
+
+string get_suggested_assignee()
+{
+    // Simple logic: return the person with lowest load
+    // For now, hardcoded to Bob
+    return "Bob";
+}

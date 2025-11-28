@@ -1,0 +1,107 @@
+/**
+ * Bot Handler
+ * Handles bot actions and menu clicks.
+ */
+
+// Handle Menu Actions
+if (action.type == "menu_action") {
+    if (action.name == "team-status") {
+        
+        // Use the shared function to get status
+        team_data = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_team_status();
+        
+        text = "📊 **Team Status Report**\n\n";
+        for each member in team_data
+        {
+            name = member.get("name");
+            status = member.get("status");
+            load = member.get("load");
+            
+            icon = "🟢";
+            if (status == "Busy") { icon = "🟡"; }
+            if (status == "Overloaded") { icon = "🔴"; }
+            
+            text = text + icon + " **" + name + "**: " + status + " (" + load + ")\n";
+        }
+
+        return {
+            "text": text,
+            "bot": {
+                "name": "TeamFlow Bot"
+            },
+            "card": {
+                "title": "Team Status",
+                "theme": "modern-inline"
+            }
+        };
+/**
+ * Bot Handler
+ * Handles bot actions and menu clicks.
+ */
+
+// Handle Menu Actions
+if (action.type == "menu_action") {
+    if (action.name == "team-status") {
+        
+        // Use the shared function to get status
+        team_data = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_team_status();
+        
+        text = "📊 **Team Status Report**\n\n";
+        for each member in team_data
+        {
+            name = member.get("name");
+            status = member.get("status");
+            load = member.get("load");
+            
+            icon = "🟢";
+            if (status == "Busy") { icon = "🟡"; }
+            if (status == "Overloaded") { icon = "🔴"; }
+            
+            text = text + icon + " **" + name + "**: " + status + " (" + load + ")\n";
+        }
+
+        return {
+            "text": text,
+            "bot": {
+                "name": "TeamFlow Bot"
+            },
+            "card": {
+                "title": "Team Status",
+                "theme": "modern-inline"
+            }
+        };
+    }
+}
+
+// Handle Welcome Message
+if (action.type == "welcome") {
+    return {
+        "text": "Hi! I'm TeamFlow. I can help you manage your team's capacity and assignments.",
+        "card": {
+            "title": "Welcome to TeamFlow",
+            "theme": "modern-inline",
+            "thumbnail": "https://www.zoho.com/sites/default/files/cliq/cliq-logo.png"
+        },
+        "buttons": [
+            {
+                "label": "Check Team Status",
+                "action": {
+                    "type": "invoke.function",
+                    "name": "team-status"
+                },
+                "type": "+",
+                "hint": "View workload chart"
+            },
+            {
+                "label": "My Priorities",
+                "action": {
+                    "type": "invoke.function",
+                    "name": "priority"
+                },
+                "hint": "See your top tasks"
+            }
+        ]
+    };
+}
+
+return {};
