@@ -1,0 +1,110 @@
+// Function to create subtasks in Zoho Projects
+// Called when user clicks "Create in Projects" button
+
+PORTAL_ID = "YOUR_PORTAL_ID_HERE";
+
+// Get data from button action
+subtasks = arguments.get("subtasks");
+main_task_title = arguments.get("main_task");
+
+if (subtasks == null || subtasks.size() == 0) {
+    return {"text": "❌ No subtasks to create"};
+}
+
+// Step 1: Get first project
+projects_response = invokeurl
+[
+    url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/"
+    type: GET
+    connection: "zohoprojects"
+];
+
+projects = projects_response.get("projects");
+
+if (projects == null || projects.size() == 0) {
+    return {"text": "❌ No projects found. Please check your portal ID."};
+}
+
+project_id = projects.get(0).get("id");
+
+// Step 2: Create main task first
+main_task_payload = {
+    "name": main_task_title,
+    "description": "AI-generated task breakdown",
+    "priority": "high"
+};
+
+main_task_response = invokeurl
+[
+    url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/tasks/"
+    type: POST
+    parameters: main_task_payload.toString()
+    connection: "zohoprojects"
+];
+
+main_task_id = main_task_response.get("tasks").get(0).get("id");
+
+// Step 3: Get project users to map assignees
+users_response = invokeurl
+[
+    url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/users/"
+    type: GET
+    connection: "zohoprojects"
+];
+
+users = users_response.get("users");
+user_map = Map();
+
+for each user in users {
+    email = user.get("email");
+    user_id = user.get("id");
+    user_map.put(email, user_id);
+}
+
+// Step 4: Create each subtask
+created_count = 0;
+failed_count = 0;
+
+for each subtask in subtasks {
+    title = subtask.get("title");
+    hours = subtask.get("hours");
+    assignee_email = subtask.get("assignee");
+    
+    // Find user ID
+    assignee_id = user_map.get(assignee_email);
+    
+    // Create subtask
+    subtask_payload = {
+        "name": title,
+        "description": "Estimated: " + hours + " hours",
+        "parent_task_id": main_task_id,
+        "priority": "normal"
+    };
+    
+    if (assignee_id != null) {
+        subtask_payload.put("owner", assignee_id);
+    }
+    
+    try {
+        subtask_response = invokeurl
+        [
+            url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/tasks/"
+            type: POST
+            parameters: subtask_payload.toString()
+            connection: "zohoprojects"
+        ];
+        created_count = created_count + 1;
+    }
+    catch (e) {
+        failed_count = failed_count + 1;
+    }
+}
+
+// Step 5: Return success message
+return {
+    "text": "✅ **Task Breakdown Created!**\n\n" +
+            "📋 Main Task: " + main_task_title + "\n" +
+            "✅ Created: " + created_count + " subtasks\n" +
+            (failed_count > 0 ? "⚠️ Failed: " + failed_count + " subtasks\n" : "") +
+            "\n[View in Projects](https://projects.zoho.com/portal/" + PORTAL_ID + "/projects/" + project_id + "#taskdetails/" + main_task_id + ")"
+};

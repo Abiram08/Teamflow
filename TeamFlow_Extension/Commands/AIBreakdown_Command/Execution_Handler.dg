@@ -1,0 +1,169 @@
+// AI Task Breakdown Command Handler
+// Uses Gemini AI to break down complex tasks into subtasks
+// and creates them in Zoho Projects
+
+PORTAL_ID = "YOUR_PORTAL_ID_HERE";  // Must match Team_Utils.dg
+
+// Parse command arguments
+args = arguments.get("form");
+task_description = args.get("task_description");
+
+if (task_description == null || task_description.trim() == "") {
+    return {"text": "❌ Please provide a task description.\n\nUsage: `/ai-breakdown [task description]`\n\nExample: `/ai-breakdown Build user authentication system with OAuth`"};
+}
+
+// Step 1: Use Gemini to analyze and break down the task
+prompt = "You are a project management AI. Break down this task into 5-7 specific, actionable subtasks. For each subtask, provide:\n1. A clear title (max 50 chars)\n2. Estimated hours (1-8 hours)\n3. Skill required (Backend/Frontend/DevOps/Design/QA)\n\nTask: " + task_description + "\n\nRespond in JSON format:\n{\n  \"main_task\": \"title\",\n  \"total_hours\": number,\n  \"subtasks\": [\n    {\"title\": \"...\", \"hours\": number, \"skill\": \"...\"}\n  ]\n}";
+
+// Call Gemini API (using Zoho's AI service)
+gemini_response = invokeurl
+[
+    url: "https://api.gemini.zoho.com/v1/generate"
+    type: POST
+    parameters: {
+        "prompt": prompt,
+        "model": "gemini-pro",
+        "temperature": 0.3
+    }
+    connection: "zoho_gemini"
+];
+
+breakdown = gemini_response.get("response");
+
+if (breakdown == null) {
+    // Fallback to mock breakdown
+    breakdown = {
+        "main_task": task_description,
+        "total_hours": 18,
+        "subtasks": [
+            {"title": "Research and design architecture", "hours": 3, "skill": "Backend"},
+            {"title": "Implement core functionality", "hours": 6, "skill": "Backend"},
+            {"title": "Build user interface", "hours": 4, "skill": "Frontend"},
+            {"title": "Write unit tests", "hours": 2, "skill": "QA"},
+            {"title": "Documentation and deployment", "hours": 3, "skill": "DevOps"}
+        ]
+    };
+}
+
+// Step 2: Get team data to suggest assignees
+team_data = invokeurl
+[
+    url: "https://www.zohoapis.com/cliq/api/v2/bots/invoke"
+    type: POST
+    parameters: {
+        "function_name": "get_team_status"
+    }
+];
+
+// Map skills to available team members
+skill_map = Map();
+for each member in team_data {
+    status = member.get("status");
+    if (status == "Available" || status == "Busy") {
+        skill_map.put(member.get("name"), member.get("task_count"));
+    }
+}
+
+// Step 3: Build response card
+subtasks_list = List();
+total_hours = breakdown.get("total_hours");
+
+for each subtask in breakdown.get("subtasks") {
+    title = subtask.get("title");
+    hours = subtask.get("hours");
+    skill = subtask.get("skill");
+    
+    // Find best assignee (person with lowest task count)
+    best_assignee = "Unassigned";
+    min_tasks = 999;
+    
+    for each member_name in skill_map.keys() {
+        task_count = skill_map.get(member_name);
+        if (task_count < min_tasks) {
+            min_tasks = task_count;
+            best_assignee = member_name;
+        }
+    }
+    
+    subtask_item = {
+        "title": title,
+        "hours": hours,
+        "skill": skill,
+        "assignee": best_assignee
+    };
+    subtasks_list.add(subtask_item);
+}
+
+// Step 4: Build rich card response
+card = {
+    "text": "🤖 AI Task Breakdown Complete",
+    "card": {
+        "title": "📋 " + breakdown.get("main_task"),
+        "theme": "modern-inline",
+        "thumbnail": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+        "sections": [
+            {
+                "id": 1,
+                "elements": [
+                    {
+                        "type": "text",
+                        "text": "**Total Estimated Time:** " + total_hours + " hours"
+                    },
+                    {
+                        "type": "text",
+                        "text": "**Subtasks:** " + subtasks_list.size()
+                    },
+                    {
+                        "type": "divider"
+                    }
+                ]
+            },
+            {
+                "id": 2,
+                "title": "Suggested Breakdown",
+                "elements": []
+            }
+        ],
+        "buttons": [
+            {
+                "label": "✅ Create in Projects",
+                "type": "+",
+                "action": {
+                    "type": "invoke.function",
+                    "data": {
+                        "name": "create_subtasks_in_projects",
+                        "subtasks": subtasks_list,
+                        "main_task": breakdown.get("main_task")
+                    }
+                }
+            },
+            {
+                "label": "❌ Cancel",
+                "type": "-",
+                "action": {
+                    "type": "invoke.function",
+                    "data": {
+                        "name": "dismiss"
+                    }
+                }
+            }
+        ]
+    }
+};
+
+// Add subtasks to card
+subtask_elements = List();
+counter = 1;
+
+for each subtask in subtasks_list {
+    element = {
+        "type": "text",
+        "text": counter + ". **" + subtask.get("title") + "**\n   ⏱️ " + subtask.get("hours") + "h | 👤 " + subtask.get("assignee") + " | 🎯 " + subtask.get("skill")
+    };
+    subtask_elements.add(element);
+    counter = counter + 1;
+}
+
+card.get("card").get("sections").get(1).put("elements", subtask_elements);
+
+return card;

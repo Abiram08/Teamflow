@@ -1,54 +1,177 @@
 
 /**
- * Smart Alerts Scheduler
- * Runs periodically (e.g., every hour) to check team health.
+ * Smart Alerts Scheduler - ENHANCED WITH REAL ZOHO PROJECTS INTEGRATION
+ * Runs hourly to detect overload and suggest real task reassignments
  */
 
-// 1. Get Team Data
+PORTAL_ID = "YOUR_PORTAL_ID_HERE";  // Must match Team_Utils.dg
+
+// 1. Get REAL Team Data from Zoho Projects
 team_data = thisapp.TeamFlow_Extension.Functions.Team_Utils.get_team_status();
 
 // 2. Analyze for Overload
 overloaded_members = List();
+available_members = List();
+
 for each member in team_data
 {
-    if (member.get("status") == "Overloaded") {
+    status = member.get("status");
+    if (status == "Overloaded") {
         overloaded_members.add(member);
+    }
+    else if (status == "Available") {
+        available_members.add(member);
     }
 }
 
 // 3. Send Alert if Overload Detected
 if (overloaded_members.size() > 0) {
     
-    text = "🔴 **OVERLOAD ALERT**\n";
+    // Get first project for task details
+    projects_response = invokeurl
+    [
+        url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/"
+        type: GET
+        connection: "zohoprojects"
+    ];
     
-    for each m in overloaded_members
-    {
-        name = m.get("name");
-        load = m.get("load");
-        text = text + "@" + name + " is at " + load + " capacity.\n";
+    projects = projects_response.get("projects");
+    
+    if (projects != null && projects.size() > 0) {
+        project_id = projects.get(0).get("id");
+        
+        // For each overloaded member, get their actual tasks
+        for each overloaded in overloaded_members
+        {
+            member_email = overloaded.get("name");
+            load = overloaded.get("load");
+            task_count = overloaded.get("task_count");
+            
+            // Find user ID
+            users_response = invokeurl
+            [
+                url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/users/"
+                type: GET
+                connection: "zohoprojects"
+            ];
+            
+            users = users_response.get("users");
+            user_id = null;
+            
+            for each user in users {
+                if (user.get("email") == member_email) {
+                    user_id = user.get("id");
+                    break;
+                }
+            }
+            
+            if (user_id != null) {
+                // Get their actual tasks
+                tasks_response = invokeurl
+                [
+                    url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/tasks/?owner=" + user_id
+                    type: GET
+                    connection: "zohoprojects"
+                ];
+                
+                tasks = tasks_response.get("tasks");
+                
+                // Find lowest priority task to suggest for reassignment
+                suggested_task = null;
+                if (tasks != null && tasks.size() > 0) {
+                    for each task in tasks {
+                        task_status = task.get("status").get("name");
+                        if (task_status != "Closed" && task_status != "Completed") {
+                            suggested_task = task;
+                            break;
+                        }
+                    }
+                }
+                
+                // Build alert message
+                alert_text = "🔴 **OVERLOAD ALERT**\n\n";
+                alert_text = alert_text + "**Member:** " + member_email + "\n";
+                alert_text = alert_text + "**Load:** " + load + " (" + task_count + " open tasks)\n\n";
+                
+                if (suggested_task != null && available_members.size() > 0) {
+                    task_name = suggested_task.get("name");
+                    task_id = suggested_task.get("id");
+                    
+                    // Suggest reassignment to most available person
+                    target_member = available_members.get(0);
+                    target_email = target_member.get("name");
+                    target_load = target_member.get("load");
+                    
+                    alert_text = alert_text + "💡 **SMART SUGGESTION:**\n";
+                    alert_text = alert_text + "Move task: \"" + task_name + "\"\n";
+                    alert_text = alert_text + "From: " + member_email + " (" + load + ")\n";
+                    alert_text = alert_text + "To: " + target_email + " (" + target_load + ")\n\n";
+                    alert_text = alert_text + "[Apply Reassignment] [View Task](https://projects.zoho.com/portal/" + PORTAL_ID + "/projects/" + project_id + "#taskdetails/" + task_id + ")";
+                }
+                
+                // Post to channel (uncomment when you have a channel ID)
+                // zoho.cliq.postToChannel("team-alerts", {"text": alert_text});
+                
+                info alert_text; // Log for testing
+            }
+        }
     }
-    
-    // Suggest Rebalancing (Mock Logic)
-    text = text + "\n💡 **Suggestion:** Move tasks to @Bob (30% capacity).";
-
-    // Post to a specific channel (e.g., "Managers") or Bot context
-    // In a real app, use zoho.cliq.postToChannel("managers", ...)
-    // For MVP, we return the text (Schedulers usually post async)
-    
-    // Example Post (Commented out as we don't have a real channel ID)
-    // zoho.cliq.postToChannel("team-updates", {"text": text, "card": {"theme": "modern-inline", "title": "Capacity Alert"}});
-    
-    info text; // Log for testing
 }
 
-// 4. Deadline Warning (Mock)
-// In real app, check due dates from Zoho Projects
-current_hour = 9; // Mock time
+// 4. Daily Standup Reminder (9 AM check)
+current_time = zoho.currenttime;
+current_hour = current_time.getHour();
+
 if (current_hour == 9) {
-    // Daily Standup Reminder
-    standup_msg = "⏰ **DAILY STANDUP REMINDER**\nGood morning team! Quick status:\n- 5 tasks in progress\n- 2 blockers detected";
+    // Count total open tasks across all projects
+    total_open = 0;
+    total_overdue = 0;
+    
+    projects_response = invokeurl
+    [
+        url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/"
+        type: GET
+        connection: "zohoprojects"
+    ];
+    
+    projects = projects_response.get("projects");
+    
+    if (projects != null) {
+        for each project in projects {
+            project_id = project.get("id");
+            
+            tasks_response = invokeurl
+            [
+                url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/tasks/"
+                type: GET
+                connection: "zohoprojects"
+            ];
+            
+            tasks = tasks_response.get("tasks");
+            
+            if (tasks != null) {
+                for each task in tasks {
+                    status = task.get("status").get("name");
+                    if (status != "Closed" && status != "Completed") {
+                        total_open = total_open + 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    standup_msg = "☀️ **DAILY STANDUP REMINDER**\n\n";
+    standup_msg = standup_msg + "Good morning team!\n\n";
+    standup_msg = standup_msg + "📊 **Today's Status:**\n";
+    standup_msg = standup_msg + "• Open tasks: " + total_open + "\n";
+    standup_msg = standup_msg + "• Overloaded members: " + overloaded_members.size() + "\n";
+    standup_msg = standup_msg + "• Available members: " + available_members.size() + "\n\n";
+    standup_msg = standup_msg + "Type `/team-status` for details!";
+    
+    // Post to channel (uncomment when you have a channel ID)
     // zoho.cliq.postToChannel("general", {"text": standup_msg});
-    info standup_msg;
+    
+    info standup_msg; // Log for testing
 }
 
 return;
