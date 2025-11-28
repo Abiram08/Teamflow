@@ -9,6 +9,13 @@
             "dark": "icons/dark.png"
         }
     },
+    "connections": {
+        "zohoprojects": {
+            "service_name": "zoho",
+            "service_linkname": "zoho_projects",
+            "scope": "ZohoProjects.portals.READ,ZohoProjects.projects.READ,ZohoProjects.tasks.READ"
+        }
+    },
     "bot": {
         "name": "TeamFlow Bot",
         "handler": "TeamFlow_Extension/Bots/TeamFlow_Bot/Bot_Handler.dg",

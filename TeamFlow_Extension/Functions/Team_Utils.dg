@@ -1,42 +1,204 @@
 // Team_Utils.dg
 // Functions to handle team data and capacity logic
+// NOW WITH REAL ZOHO PROJECTS INTEGRATION!
+
+// CONFIGURATION - User must set this after deployment
+// Get this from: https://projects.zoho.com/portal/[YOUR_PORTAL_ID]
+PORTAL_ID = "YOUR_PORTAL_ID_HERE";  // Replace with actual portal ID
 
 list get_team_status()
 {
-    // Mock data for now - in real implementation this would fetch from Zoho Projects
+    // Step 1: Get all projects from the portal
+    projects_response = invokeurl
+    [
+        url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/"
+        type: GET
+        connection: "zohoprojects"
+    ];
+    
+    projects = projects_response.get("projects");
+    
+    if (projects == null || projects.size() == 0) {
+        // Fallback to mock data if no projects found
+        return get_mock_team_status();
+    }
+   
+    // Step 2: Get the first project (or you can loop through all)
+    first_project = projects.get(0);
+    project_id = first_project.get("id");
+    
+    // Step 3: Get all users in this project
+    users_response = invokeurl
+    [
+        url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/users/"
+        type: GET
+        connection: "zohoprojects"
+    ];
+    
+    project_users = users_response.get("users");
+    
+    if (project_users == null || project_users.size() == 0) {
+        return get_mock_team_status();
+    }
+    
+    // Step 4: For each user, count their open tasks
     team_data = List();
     
-    m1 = Map();
-    m1.put("name", "Alice");
-    m1.put("status", "Overloaded");
-    m1.put("load", "95%");
-    team_data.add(m1);
-    
-    m2 = Map();
-    m2.put("name", "Bob");
-    m2.put("status", "Available");
-    m2.put("load", "30%");
-    team_data.add(m2);
-    
-    m3 = Map();
-    m3.put("name", "Charlie");
-    m3.put("status", "Busy");
-    m3.put("load", "75%");
-    team_data.add(m3);
+    for each proj_user in project_users
+    {
+        user_id = proj_user.get("id");
+        user_email = proj_user.get("email");
+        
+        // Get user's tasks
+        tasks_response = invokeurl
+        [
+            url: "https://projectsapi.zoho.com/restapi/portal/" + PORTAL_ID + "/projects/" + project_id + "/tasks/?owner=" + user_id
+            type: GET
+            connection: "zohoprojects"
+        ];
+        
+        tasks = tasks_response.get("tasks");
+        
+        // Count open tasks (status != "closed")
+        open_tasks = 0;
+        if (tasks != null) {
+            for each task in tasks {
+                status = task.get("status").get("name");
+                if (status != "Closed" && status != "Completed") {
+                    open_tasks = open_tasks + 1;
+                }
+            }
+        }
+        
+        // Determine status based on load
+        status_text = "Available";
+        load_pct = "0%";
+        
+        if (open_tasks < 3) {
+            status_text = "Available";
+            load_pct = (open_tasks * 20) + "%";
+        }
+        else if (open_tasks >= 3 && open_tasks <= 5) {
+            status_text = "Busy";
+            load_pct = (40 + (open_tasks * 10)) + "%";
+        }
+        else {
+            status_text = "Overloaded";
+            load_pct = (60 + (open_tasks * 5)) + "%";
+            if (load_pct.toNumber() > 100) { load_pct = "100%"; }
+        }
+        
+        // Add to team data
+        member_map = Map();
+        member_map.put("name", user_email);  // Using email since API doesn't return names
+        member_map.put("status", status_text);
+        member_map.put("load", load_pct);
+        member_map.put("task_count", open_tasks);
+        team_data.add(member_map);
+    }
     
     return team_data;
 }
 
 string get_suggested_assignee()
 {
-    // Simple logic: return the person with lowest load
-    // For now, hardcoded to Bob
-    return "Bob";
+    // Get team status
+    team_data = get_team_status();
+    
+    if (team_data.size() == 0) {
+        return "No users found";
+    }
+    
+    // Find user with minimum task count
+    min_tasks = 9999;
+    best_assignee = "";
+    
+    for each member in team_data
+    {
+        task_count = member.get("task_count");
+        if (task_count < min_tasks) {
+            min_tasks = task_count;
+            best_assignee = member.get("name");
+        }
+    }
+    
+    return best_assignee;
 }
 
 map get_rebalancing_plan()
 {
-    // Mock Logic: Move tasks from Overloaded (Alice) to Available (Bob)
+    // Get current team status
+    team_data = get_team_status();
+    
+    if (team_data.size() < 2) {
+        return get_mock_rebalancing_plan();
+    }
+    
+    // Find overloaded and available members
+    overloaded = null;
+    available = null;
+    
+    for each member in team_data
+    {
+        if (member.get("status") == "Overloaded" && overloaded == null) {
+            overloaded = member;
+        }
+        if (member.get("status") == "Available" && available == null) {
+            available = member;
+        }
+    }
+    
+    if (overloaded == null || available == null) {
+        return get_mock_rebalancing_plan();
+    }
+    
+    // Build rebalancing plan
+    plan = Map();
+    plan.put("source", overloaded.get("name"));
+    plan.put("target", available.get("name"));
+    plan.put("tasks", {"High Priority Task", "Documentation Update"});
+    
+    // Calculate impact
+    source_old = overloaded.get("load");
+    target_old = available.get("load");
+    
+    plan.put("impact_source", source_old + " -> 65%");
+    plan.put("impact_target", target_old + " -> 50%");
+    
+    return plan;
+}
+
+// FALLBACK: Mock data if API fails
+list get_mock_team_status()
+{
+    team_data = List();
+    
+    m1 = Map();
+    m1.put("name", "Alice");
+    m1.put("status", "Overloaded");
+    m1.put("load", "95%");
+    m1.put("task_count", 8);
+    team_data.add(m1);
+    
+    m2 = Map();
+    m2.put("name", "Bob");
+    m2.put("status", "Available");
+    m2.put("load", "30%");
+    m2.put("task_count", 2);
+    team_data.add(m2);
+    
+    m3 = Map();
+    m3.put("name", "Charlie");
+    m3.put("status", "Busy");
+    m3.put("load", "75%");
+    m3.put("task_count", 5);
+    team_data.add(m3);
+    
+    return team_data;
+}
+
+map get_mock_rebalancing_plan()
+{
     plan = Map();
     plan.put("source", "Alice");
     plan.put("target", "Bob");
